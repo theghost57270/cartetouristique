@@ -9,10 +9,18 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <style>
 html, body { height: 100%; margin: 0; }
+
+/* La carte commence sous la navbar */
 #map { 
-  height: calc(100vh - 64px); /* laisse la place pour la navbar */
-  width: 100%; 
+  position: absolute;
+  top: 64px; /* hauteur navbar */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
 }
+
+/* Popup images */
 .popup-img { width: 48%; height: auto; border-radius: 8px; margin-top: 5px; }
 .popup-container { display: flex; gap: 5px; flex-wrap: wrap; }
 .leaflet-popup-content { max-width: 500px; font-family: Arial, sans-serif; }
@@ -31,18 +39,13 @@ html, body { height: 100%; margin: 0; }
 }
 #filtersContent.hidden { display: none; }
 #toggleFilters { width: 100%; text-align: left; margin-bottom: 5px; }
-
-/* Retour à la ligne pour chaque checkbox */
-#filtersContent label { 
-  display: block; 
-  margin-bottom: 5px; 
-}
+#filtersContent label { display: block; margin-bottom: 5px; }
 
 /* Barre de recherche flottante */
 #searchContainer {
   position: absolute;
   top: 80px;
-  left: 280px; /* décale pour ne pas chevaucher le menu */
+  left: 280px; 
   z-index: 1000;
   width: 300px;
 }

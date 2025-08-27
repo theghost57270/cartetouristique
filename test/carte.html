@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carte des 100 lieux emblématiques de France</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>#map { height: 100vh; } .leaflet-popup-content img { width: 100%; border-radius: 8px; }</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([46.603354, 1.888334], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+const lieux = [
+  { name: "Tour Eiffel", coords: [48.8584, 2.2945], description: "Monument emblématique de Paris.", image: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Tour_Eiffel_Wikimedia_Commons.jpg" },
+  { name: "Louvre", coords: [48.8606, 2.3376], description: "Un des plus grands musées du monde.", image: "https://upload.wikimedia.org/wikipedia/commons/a/af/Louvre_Museum_Wikimedia_Commons.jpg" },
+  { name: "Château de Versailles", coords: [48.8049, 2.1204], description: "Palais royal avec jardins magnifiques.", image: "https://upload.wikimedia.org/wikipedia/commons/9/9e/Chateau_de_Versailles.jpg" },
+  { name: "Mont Saint-Michel", coords: [48.6360, -1.5115], description: "Îlot rocheux avec abbaye célèbre.", image: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Mont_St_Michel_from_air.jpg" },
+  { name: "Cathédrale Notre-Dame de Paris", coords: [48.8530, 2.3499], description: "Cathédrale gothique emblématique.", image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Notre_Dame_de_Paris.jpg" },
+  { name: "Pont du Gard", coords: [43.9475, 4.5350], description: "Aqueduc romain impressionnant.", image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Pont_du_Gard_2009.jpg" },
+  { name: "Jardin du Luxembourg", coords: [48.8462, 2.3371], description: "Beau jardin public à Paris.", image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Jardin_du_Luxembourg_Wikimedia_Commons.jpg" },
+  { name: "Palais des Papes", coords: [43.9503, 4.8055], description: "Palais gothique à Avignon.", image: "https://upload.wikimedia.org/wikipedia/commons/5/51/Palais_des_Papes_Avignon.jpg" },
+  { name: "Musée d'Orsay", coords: [48.8600, 2.3266], description: "Musée avec collections impressionnistes.", image: "https://upload.wikimedia.org/wikipedia/commons/6/6a/Musee_dOrsay_Wikimedia_Commons.jpg" },
+  { name: "Château de Chambord", coords: [47.6169, 1.5161], description: "Château Renaissance emblématique de la Loire.", image: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Chambord_Chateau.jpg" }
+  // Ajouter les 90 autres lieux ici
+];
+lieux.forEach(lieu => {
+  const popupContent = `<h3>${lieu.name}</h3><p>${lieu.description}</p><img src="${lieu.image}" alt="${lieu.name}">`;
+  L.marker(lieu.coords).addTo(map).bindPopup(popupContent);
+});
+</script>
+</body>
+</html>

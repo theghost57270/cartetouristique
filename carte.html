@@ -14,22 +14,21 @@ html, body { height: 100%; margin: 0; }
 .popup-container { display: flex; gap: 5px; }
 .leaflet-popup-content { max-width: 500px; font-family: Arial, sans-serif; }
 #sidebar {
-position: absolute;
-top: 80px;
-left: 10px;
-width: 250px;
-background: rgba(255,255,255,0.9);
-border-radius: 8px;
-padding: 10px;
-z-index: 1000;
-box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  position: absolute;
+  top: 80px;
+  left: 10px;
+  width: 250px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 #filtersContent.hidden { display: none; }
 #toggleFilters { width: 100%; text-align: left; }
 </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
-
 
 <!-- Navbar -->
 <nav class="bg-gray-900 text-white p-4 flex justify-between items-center">
@@ -41,11 +40,86 @@ box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 </div>
 </nav>
 
-
 <!-- Barre de recherche -->
 <div class="p-4 max-w-xl mx-auto">
 <input id="searchInput" type="text" placeholder="Rechercher une ville..." class="w-full p-3 border rounded">
 </div>
 
-
 <!-- Sidebar flottant -->
+<div id="sidebar">
+  <button id="toggleFilters">Filtres &#9660;</button>
+  <div id="filtersContent">
+    <label><input type="checkbox" value="musée" checked> Musées</label>
+    <label><input type="checkbox" value="monument" checked> Monuments</label>
+    <label><input type="checkbox" value="parc" checked> Parcs</label>
+    <label><input type="checkbox" value="château" checked> Châteaux</label>
+  </div>
+</div>
+
+<!-- Carte -->
+<div id="map"></div>
+
+<script>
+var franceBounds = [[41.0, -5.5], [51.5, 9.5]];
+var map = L.map('map', { maxBounds: franceBounds, minZoom: 5, maxZoom: 16 }).fitBounds(franceBounds);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+}).addTo(map);
+
+var activities = [
+  { name: "Tour Eiffel", coords: [48.8584, 2.2945], description: "Monument emblématique de Paris.", category: "monument", images: ["images/louvre1.jpg", "images/louvre2.jpg"] },
+  { name: "Musée du Louvre", coords: [48.8606, 2.3376], description: "Un des plus grands musées du monde.", category: "musée", images: ["images/louvre1.jpg", "images/louvre2.jpg"] },
+  { name: "Jardin du Luxembourg", coords: [48.8462, 2.3371], description: "Beau jardin public à Paris.", category: "parc", images: ["images/louvre1.jpg", "images/louvre2.jpg"] },
+  { name: "Château de Versailles", coords: [48.8049, 2.1204], description: "Palais royal avec jardins magnifiques.", category: "château", images: ["images/louvre1.jpg", "images/louvre2.jpg"] },
+  { name: "Mont Saint-Michel", coords: [48.6360, -1.5115], description: "Îlot rocheux avec abbaye célèbre.", category: "monument", images: ["images/louvre1.jpg", "images/louvre2.jpg"] }
+];
+
+var markersByCategory = {};
+
+activities.forEach(function(act) {
+  var popupContent = `<b>${act.name}</b><br>${act.description}<div class='popup-container'>`;
+  act.images.forEach(img => { popupContent += `<img src='${img}' class='popup-img'>`; });
+  popupContent += `</div>`;
+
+  var marker = L.marker(act.coords).bindPopup(popupContent, { maxWidth: 500, minWidth: 350 });
+  if (!markersByCategory[act.category]) { markersByCategory[act.category] = []; }
+  markersByCategory[act.category].push(marker);
+  marker.addTo(map);
+});
+
+function updateMarkers() {
+  var checkedCategories = Array.from(document.querySelectorAll('#sidebar input:checked')).map(cb => cb.value);
+  Object.keys(markersByCategory).forEach(function(cat) {
+    markersByCategory[cat].forEach(function(marker) {
+      if (checkedCategories.includes(cat)) { marker.addTo(map); } else { map.removeLayer(marker); }
+    });
+  });
+}
+
+document.querySelectorAll('#sidebar input').forEach(cb => cb.addEventListener('change', updateMarkers));
+
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+  if (e.key === 'Enter') {
+    var city = this.value;
+    fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=FR&q=' + city)
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.length > 0) {
+          var lat = data[0].lat, lon = data[0].lon;
+          map.setView([lat, lon], 12);
+          L.popup().setLatLng([lat, lon]).setContent(`<b>${city}</b>`).openOn(map);
+        } else { alert("Ville non trouvée en France !"); }
+      });
+  }
+});
+
+// Collapse menu filters
+document.getElementById('toggleFilters').addEventListener('click', function() {
+  const content = document.getElementById('filtersContent');
+  content.classList.toggle('hidden');
+  this.innerHTML = content.classList.contains('hidden') ? 'Filtres &#9658;' : 'Filtres &#9660;';
+});
+</script>
+</body>
+</html>

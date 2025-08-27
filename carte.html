@@ -9,16 +9,21 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <style>
 html, body { height: 100%; margin: 0; }
-#map { height: 100%; width: 100%; }
+#map { 
+  height: calc(100vh - 64px); /* laisse la place pour la navbar */
+  width: 100%; 
+}
 .popup-img { width: 48%; height: auto; border-radius: 8px; margin-top: 5px; }
-.popup-container { display: flex; gap: 5px; }
+.popup-container { display: flex; gap: 5px; flex-wrap: wrap; }
 .leaflet-popup-content { max-width: 500px; font-family: Arial, sans-serif; }
+
+/* Sidebar flottant */
 #sidebar {
   position: absolute;
-  top: 120px; 
+  top: 80px;
   left: 10px;
   width: 250px;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border-radius: 8px;
   padding: 10px;
   z-index: 1000;
@@ -26,6 +31,31 @@ html, body { height: 100%; margin: 0; }
 }
 #filtersContent.hidden { display: none; }
 #toggleFilters { width: 100%; text-align: left; margin-bottom: 5px; }
+
+/* Retour à la ligne pour chaque checkbox */
+#filtersContent label { 
+  display: block; 
+  margin-bottom: 5px; 
+}
+
+/* Barre de recherche flottante */
+#searchContainer {
+  position: absolute;
+  top: 80px;
+  left: 280px; /* décale pour ne pas chevaucher le menu */
+  z-index: 1000;
+  width: 300px;
+}
+#searchContainer input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #ccc;
+  background: rgba(255,255,255,0.95);
+}
+
+/* Navbar */
+nav { height: 64px; }
 </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -41,8 +71,8 @@ html, body { height: 100%; margin: 0; }
 </nav>
 
 <!-- Barre de recherche flottante -->
-<div class="absolute top-20 left-10 z-50 w-80">
-  <input id="searchInput" type="text" placeholder="Rechercher une ville..." class="w-full p-3 border rounded bg-white">
+<div id="searchContainer">
+  <input id="searchInput" type="text" placeholder="Rechercher une ville...">
 </div>
 
 <!-- Sidebar flottant -->
@@ -60,7 +90,7 @@ html, body { height: 100%; margin: 0; }
 <div id="map"></div>
 
 <script>
-// Initialisation de la carte
+// Carte
 var franceBounds = [[41.0, -5.5], [51.5, 9.5]];
 var map = L.map('map', { maxBounds: franceBounds, minZoom: 5, maxZoom: 16 }).fitBounds(franceBounds);
 
@@ -68,7 +98,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Activités et markers
+// Activités
 var activities = [
   { name: "Tour Eiffel", coords: [48.8584, 2.2945], description: "Monument emblématique de Paris.", category: "monument", images: ["images/louvre1.jpg","images/louvre2.jpg"] },
   { name: "Musée du Louvre", coords: [48.8606, 2.3376], description: "Un des plus grands musées du monde.", category: "musée", images: ["images/louvre1.jpg","images/louvre2.jpg"] },
@@ -89,7 +119,7 @@ activities.forEach(function(act) {
   marker.addTo(map);
 });
 
-// Fonction de mise à jour des markers
+// Mise à jour des markers
 function updateMarkers() {
   var checkedCategories = Array.from(document.querySelectorAll('#sidebar input:checked')).map(cb => cb.value);
   Object.keys(markersByCategory).forEach(function(cat) {
@@ -98,10 +128,9 @@ function updateMarkers() {
     });
   });
 }
-
 document.querySelectorAll('#sidebar input').forEach(cb => cb.addEventListener('change', updateMarkers));
 
-// Recherche par ville
+// Recherche
 document.getElementById('searchInput').addEventListener('keyup', function(e) {
   if (e.key === 'Enter') {
     var city = this.value;
@@ -117,12 +146,13 @@ document.getElementById('searchInput').addEventListener('keyup', function(e) {
   }
 });
 
-// Collapse menu filters
+// Collapse filtre
 document.getElementById('toggleFilters').addEventListener('click', function() {
   const content = document.getElementById('filtersContent');
   content.classList.toggle('hidden');
   this.innerHTML = content.classList.contains('hidden') ? 'Filtres &#9658;' : 'Filtres &#9660;';
 });
 </script>
+
 </body>
 </html>

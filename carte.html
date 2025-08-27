@@ -1,35 +1,137 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carte des 100 lieux emblématiques de France</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<style>#map { height: 100vh; } .leaflet-popup-content img { width: 100%; border-radius: 8px; }</style>
+  <meta charset="UTF-8">
+  <title>Ma Ville - Carte interactive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    #map { height: 85vh; }
+    img.popup-img { width: 150px; border-radius: 8px; margin-top: 5px; }
+  </style>
 </head>
-<body>
-<div id="map"></div>
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-<script>
-const map = L.map('map').setView([46.603354, 1.888334], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-const lieux = [
-  { name: "Tour Eiffel", coords: [48.8584, 2.2945], description: "Monument emblématique de Paris.", image: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Tour_Eiffel_Wikimedia_Commons.jpg" },
-  { name: "Louvre", coords: [48.8606, 2.3376], description: "Un des plus grands musées du monde.", image: "https://upload.wikimedia.org/wikipedia/commons/a/af/Louvre_Museum_Wikimedia_Commons.jpg" },
-  { name: "Château de Versailles", coords: [48.8049, 2.1204], description: "Palais royal avec jardins magnifiques.", image: "https://upload.wikimedia.org/wikipedia/commons/9/9e/Chateau_de_Versailles.jpg" },
-  { name: "Mont Saint-Michel", coords: [48.6360, -1.5115], description: "Îlot rocheux avec abbaye célèbre.", image: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Mont_St_Michel_from_air.jpg" },
-  { name: "Cathédrale Notre-Dame de Paris", coords: [48.8530, 2.3499], description: "Cathédrale gothique emblématique.", image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Notre_Dame_de_Paris.jpg" },
-  { name: "Pont du Gard", coords: [43.9475, 4.5350], description: "Aqueduc romain impressionnant.", image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Pont_du_Gard_2009.jpg" },
-  { name: "Jardin du Luxembourg", coords: [48.8462, 2.3371], description: "Beau jardin public à Paris.", image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Jardin_du_Luxembourg_Wikimedia_Commons.jpg" },
-  { name: "Palais des Papes", coords: [43.9503, 4.8055], description: "Palais gothique à Avignon.", image: "https://upload.wikimedia.org/wikipedia/commons/5/51/Palais_des_Papes_Avignon.jpg" },
-  { name: "Musée d'Orsay", coords: [48.8600, 2.3266], description: "Musée avec collections impressionnistes.", image: "https://upload.wikimedia.org/wikipedia/commons/6/6a/Musee_dOrsay_Wikimedia_Commons.jpg" },
-  { name: "Château de Chambord", coords: [47.6169, 1.5161], description: "Château Renaissance emblématique de la Loire.", image: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Chambord_Chateau.jpg" }
-  // Ajouter les 90 autres lieux ici
-];
-lieux.forEach(lieu => {
-  const popupContent = `<h3>${lieu.name}</h3><p>${lieu.description}</p><img src="${lieu.image}" alt="${lieu.name}">`;
-  L.marker(lieu.coords).addTo(map).bindPopup(popupContent);
-});
-</script>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Navbar -->
+  <nav class="bg-gray-900 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">Ma Ville</h1>
+    <div>
+      <a href="index.html" class="px-3 hover:text-yellow-400">Accueil</a>
+      <a href="carte.html" class="px-3 hover:text-yellow-400">Carte interactive</a>
+      <a href="contact.html" class="px-3 hover:text-yellow-400">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Barre de recherche -->
+  <div class="p-4 max-w-xl mx-auto">
+    <input id="searchInput" type="text" placeholder="Rechercher une ville..." class="w-full p-3 border rounded">
+  </div>
+
+  <div class="flex">
+    <div id="sidebar" class="w-64 bg-white p-4 border-r border-gray-300">
+      <h3 class="text-lg font-semibold mb-2">Filtres</h3>
+      <label class="block"><input type="checkbox" value="musée" checked> Musées</label>
+      <label class="block"><input type="checkbox" value="monument" checked> Monuments</label>
+      <label class="block"><input type="checkbox" value="parc" checked> Parcs</label>
+    </div>
+    <div id="map" class="flex-grow"></div>
+  </div>
+
+  <script>
+    // Centrer et restreindre la carte à la France
+    var franceBounds = [[41.0, -5.5], [51.5, 9.5]];
+    var map = L.map('map', { maxBounds: franceBounds, minZoom: 5, maxZoom: 16 }).fitBounds(franceBounds);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var activities = [
+      {
+        name: "Musée du Louvre",
+        coords: [48.8606, 2.3376],
+        description: "Un des plus grands musées du monde.",
+        category: "musée",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Louvre_Museum_Wikimedia_Commons.jpg/320px-Louvre_Museum_Wikimedia_Commons.jpg"
+      },
+      {
+        name: "Tour Eiffel",
+        coords: [48.8584, 2.2945],
+        description: "Monument emblématique de Paris.",
+        category: "monument",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Tour_Eiffel_Wikimedia_Commons.jpg/320px-Tour_Eiffel_Wikimedia_Commons.jpg"
+      },
+      {
+        name: "Jardin du Luxembourg",
+        coords: [48.8462, 2.3371],
+        description: "Un beau jardin public dans le 6ème arrondissement.",
+        category: "parc",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Jardin_du_Luxembourg_Wikimedia_Commons.jpg/320px-Jardin_du_Luxembourg_Wikimedia_Commons.jpg"
+      },
+	  { name: "Tour Eiffel", coords: [48.8584, 2.2945], description: "Monument emblématique de Paris.", category: "monument", image: "https://upload.wikimedia.org/wikipedia/commons/e/e6/Tour_Eiffel_Wikimedia_Commons.jpg" },
+  { name: "Louvre", coords: [48.8606, 2.3376], description: "Un des plus grands musées du monde.", category: "musée", image: "https://upload.wikimedia.org/wikipedia/commons/a/af/Louvre_Museum_Wikimedia_Commons.jpg" },
+  { name: "Château de Versailles", coords: [48.8049, 2.1204], description: "Palais royal avec jardins magnifiques.", category: "château", image: "https://upload.wikimedia.org/wikipedia/commons/9/9e/Chateau_de_Versailles.jpg" },
+  { name: "Mont Saint-Michel", coords: [48.6360, -1.5115], description: "Îlot rocheux avec abbaye célèbre.", category: "monument", image: "https://upload.wikimedia.org/wikipedia/commons/7/7f/Mont_St_Michel_from_air.jpg" },
+  { name: "Cathédrale Notre-Dame de Paris", coords: [48.8530, 2.3499], description: "Cathédrale gothique emblématique.", category: "monument", image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Notre_Dame_de_Paris.jpg" },
+  { name: "Pont du Gard", coords: [43.9475, 4.5350], description: "Aqueduc romain impressionnant.", category: "monument", image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Pont_du_Gard_2009.jpg" },
+  { name: "Jardin du Luxembourg", coords: [48.8462, 2.3371], description: "Beau jardin public à Paris.", category: "parc", image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Jardin_du_Luxembourg_Wikimedia_Commons.jpg" },
+  { name: "Palais des Papes", coords: [43.9503, 4.8055], description: "Palais gothique à Avignon.", category: "monument", image: "https://upload.wikimedia.org/wikipedia/commons/5/51/Palais_des_Papes_Avignon.jpg" },
+  { name: "Musée d'Orsay", coords: [48.8600, 2.3266], description: "Musée avec collections impressionnistes.", category: "musée", image: "https://upload.wikimedia.org/wikipedia/commons/6/6a/Musee_dOrsay_Wikimedia_Commons.jpg" },
+  { name: "Château de Chambord", coords: [47.6169, 1.5161], description: "Château Renaissance emblématique de la Loire.", category: "château", image: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Chambord_Chateau.jpg" }
+    ];
+
+    var markersByCategory = {};
+
+    activities.forEach(function(act) {
+      var marker = L.marker(act.coords)
+        .bindPopup("<b>" + act.name + "</b><br>" + act.description + "<br><img src='" + act.image + "' class='popup-img'>");
+
+      if (!markersByCategory[act.category]) {
+        markersByCategory[act.category] = [];
+      }
+      markersByCategory[act.category].push(marker);
+      marker.addTo(map);
+    });
+
+    function updateMarkers() {
+      var checkedCategories = Array.from(document.querySelectorAll('#sidebar input:checked')).map(cb => cb.value);
+      Object.keys(markersByCategory).forEach(function(cat) {
+        markersByCategory[cat].forEach(function(marker) {
+          if (checkedCategories.includes(cat)) {
+            marker.addTo(map);
+          } else {
+            map.removeLayer(marker);
+          }
+        });
+      });
+    }
+
+    document.querySelectorAll('#sidebar input').forEach(function(cb) {
+      cb.addEventListener('change', updateMarkers);
+    });
+
+    // Recherche de ville avec Nominatim (limitée à la France) avec popup
+    document.getElementById('searchInput').addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') {
+        var city = this.value;
+        fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=FR&q=' + city)
+          .then(response => response.json())
+          .then(data => {
+            if (data.length > 0) {
+              var lat = data[0].lat;
+              var lon = data[0].lon;
+              map.setView([lat, lon], 12); // zoom légèrement plus rapproché
+              L.popup()
+               .setLatLng([lat, lon])
+               .setContent("<b>" + city + "</b>")
+               .openOn(map);
+            } else {
+              alert("Ville non trouvée en France !");
+            }
+          });
+      }
+    });
+  </script>
 </body>
 </html>
